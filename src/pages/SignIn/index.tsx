@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   Image,
   View,
@@ -26,18 +27,28 @@ import {
 const SignIn: React.FC = () => {
   const [
     shouldRenderCreateAccountButton,
-    setShouldRenderCreateAccountButton,
+    _setShouldRenderCreateAccountButton,
   ] = useState(true);
 
-  useEffect(() => {
-    Keyboard.addListener('keyboardDidShow', () => {
-      setShouldRenderCreateAccountButton(Platform.OS === 'ios');
-    });
+  const navigation = useNavigation();
 
-    Keyboard.addListener('keyboardDidHide', () => {
-      setShouldRenderCreateAccountButton(true);
-    });
+  const hideBackToSignInButton = useCallback(() => {
+    _setShouldRenderCreateAccountButton(Platform.OS === 'ios');
   }, []);
+
+  const showBackToSignInButton = useCallback(() => {
+    _setShouldRenderCreateAccountButton(true);
+  }, []);
+
+  useEffect(() => {
+    Keyboard.addListener('keyboardDidShow', hideBackToSignInButton);
+    Keyboard.addListener('keyboardDidHide', showBackToSignInButton);
+
+    return () => {
+      Keyboard.removeListener('keyboardDidShow', showBackToSignInButton);
+      Keyboard.removeListener('keyboardDidHide', hideBackToSignInButton);
+    };
+  }, [hideBackToSignInButton, showBackToSignInButton]);
 
   return (
     <>
@@ -69,7 +80,7 @@ const SignIn: React.FC = () => {
       </KeyboardAvoidingView>
 
       {shouldRenderCreateAccountButton && (
-        <CreateAccountButton>
+        <CreateAccountButton onPress={() => navigation.navigate('SignUp')}>
           <Icon name="log-in" size={20} color="#ff9000" />
           <CreateAccountButtonText>Criar uma conta</CreateAccountButtonText>
         </CreateAccountButton>
