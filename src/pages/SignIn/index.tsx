@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/Feather';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/mobile';
+import { useAuth } from '../../hooks/auth';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -47,7 +48,7 @@ const SignIn: React.FC = () => {
   ] = useState(true);
 
   const navigation = useNavigation();
-
+  const { signIn } = useAuth();
   // Keyboard Handlers
   const hideBackToSignInButton = useCallback(() => {
     _setShouldRenderCreateAccountButton(Platform.OS === 'ios');
@@ -67,37 +68,37 @@ const SignIn: React.FC = () => {
     };
   }, [hideBackToSignInButton, showBackToSignInButton]);
 
-  const handleSubmit = useCallback(async (data: SignInFormData) => {
-    try {
-      formRef.current?.setErrors({});
+  const handleSubmit = useCallback(
+    async (data: SignInFormData) => {
+      try {
+        formRef.current?.setErrors({});
 
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .email('Digite um e-mail válido')
-          .required('E-mail obrigatório'),
-        password: Yup.string().required('Senha obrigatória'),
-      });
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .email('Digite um e-mail válido')
+            .required('E-mail obrigatório'),
+          password: Yup.string().required('Senha obrigatória'),
+        });
 
-      await schema.validate(data, { abortEarly: false });
+        await schema.validate(data, { abortEarly: false });
 
-      // await signIn({ email: data.email, password: data.password });
+        await signIn({ email: data.email, password: data.password });
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
 
-      // history.push('/dashboard')
-    } catch (err) {
-      if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(err);
+          formRef.current?.setErrors(errors);
 
-        formRef.current?.setErrors(errors);
-
-        return;
+          return;
+        }
+        Alert.alert(
+          'Erro na autenticação',
+          'Occoreu um erro ao fazer login, cheque suas credenciais',
+        );
       }
-
-      Alert.alert(
-        'Erro na autenticação',
-        'Occoreu um erro ao fazer login, cheque suas credenciais',
-      );
-    }
-  }, []);
+    },
+    [signIn],
+  );
   return (
     <>
       <KeyboardAvoidingView
