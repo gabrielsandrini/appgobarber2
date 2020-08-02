@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import api from '../../services/api';
